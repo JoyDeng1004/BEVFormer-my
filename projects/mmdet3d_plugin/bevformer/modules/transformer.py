@@ -213,7 +213,6 @@ class PerceptionTransformer(BaseModule):
             os.makedirs(bev_feature_file_path)
 
         torch.save(bev_embed, file_path)
-
         print(bev_embed.shape)
 
         return bev_embed
