@@ -4,6 +4,7 @@
 #  Modified by Zhiqi Li
 # ---------------------------------------------
 
+import os
 import numpy as np
 import torch
 import torch.nn as nn
@@ -115,22 +116,27 @@ class PerceptionTransformer(BaseModule):
         obtain bev features.
         """
 
+        # Get the batch size (bs), the number of samples in the batch
         bs = mlvl_feats[0].size(0)
         bev_queries = bev_queries.unsqueeze(1).repeat(1, bs, 1)
         bev_pos = bev_pos.flatten(2).permute(2, 0, 1)
 
-        # obtain rotation angle and shift with ego motion
+        ### obtain rotation angle and shift with ego motion
+        # Extract the CAN bus data from the image metadata to obtain the displacement in the x and y directions
         delta_x = np.array([each['can_bus'][0]
                            for each in kwargs['img_metas']])
         delta_y = np.array([each['can_bus'][1]
                            for each in kwargs['img_metas']])
+        # Radian conversion
         ego_angle = np.array(
-            [each['can_bus'][-2] / np.pi * 180 for each in kwargs['img_metas']])
+            [each['can_bus'][-2] / \
+             np.pi * 180 for each in kwargs['img_metas']])
         grid_length_y = grid_length[0]
         grid_length_x = grid_length[1]
         translation_length = np.sqrt(delta_x ** 2 + delta_y ** 2)
         translation_angle = np.arctan2(delta_y, delta_x) / np.pi * 180
         bev_angle = ego_angle - translation_angle
+
         shift_y = translation_length * \
             np.cos(bev_angle / 180 * np.pi) / grid_length_y / bev_h
         shift_x = translation_length * \
@@ -183,6 +189,8 @@ class PerceptionTransformer(BaseModule):
         feat_flatten = feat_flatten.permute(
             0, 2, 1, 3)  # (num_cam, H*W, bs, embed_dims)
 
+        # obtain the BEV feature
+        # ここからprojects/mmdet3d_plugin/bevformer/modules/encoder.pyに入る
         bev_embed = self.encoder(
             bev_queries,
             feat_flatten,
@@ -196,6 +204,17 @@ class PerceptionTransformer(BaseModule):
             shift=shift,
             **kwargs
         )
+        
+        # save_tensor(bev_embed, 'bev_embed')
+        bev_feature_file_path = '../../user'
+        file_path = os.path.join(bev_feature_file_path, 'bev_feature.npy')
+
+        if not os.path.exists(bev_feature_file_path):
+            os.makedirs(bev_feature_file_path)
+
+        torch.save(bev_embed, file_path)
+
+        print(bev_embed.shape)
 
         return bev_embed
 
@@ -272,6 +291,7 @@ class PerceptionTransformer(BaseModule):
         query_pos = query_pos.permute(1, 0, 2)
         bev_embed = bev_embed.permute(1, 0, 2)
 
+        # ここからprojects/mmdet3d_plugin/bevformer/modules/decoder.pyに入る
         inter_states, inter_references = self.decoder(
             query=query,
             key=None,
@@ -286,4 +306,5 @@ class PerceptionTransformer(BaseModule):
 
         inter_references_out = inter_references
 
+        # ここでprojects/mmdet3d_plugin/bevformer/dense_heads/bevformer_head.pyに戻す
         return bev_embed, inter_states, init_reference_out, inter_references_out

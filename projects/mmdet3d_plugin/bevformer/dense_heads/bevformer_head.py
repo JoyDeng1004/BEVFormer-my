@@ -136,8 +136,10 @@ class BEVFormerHead(DETRHead):
         object_query_embeds = self.query_embedding.weight.to(dtype)
         bev_queries = self.bev_embedding.weight.to(dtype)
 
+        # (transformer)
         bev_mask = torch.zeros((bs, self.bev_h, self.bev_w),
                                device=bev_queries.device).to(dtype)
+        # PE has already been initialized
         bev_pos = self.positional_encoding(bev_mask).to(dtype)
 
         if only_bev:  # only use encoder to obtain BEV features, TODO: refine the workaround
@@ -153,6 +155,7 @@ class BEVFormerHead(DETRHead):
                 prev_bev=prev_bev,
             )
         else:
+            # ここからprojects/mmdet3d_plugin/bevformer/modules/transformer.py入る
             outputs = self.transformer(
                 mlvl_feats,
                 bev_queries,
@@ -178,7 +181,9 @@ class BEVFormerHead(DETRHead):
             else:
                 reference = inter_references[lvl - 1]
             reference = inverse_sigmoid(reference)
+            # Class
             outputs_class = self.cls_branches[lvl](hs[lvl])
+            # Regression Box Information
             tmp = self.reg_branches[lvl](hs[lvl])
 
             # TODO: check the shape of reference
@@ -209,7 +214,7 @@ class BEVFormerHead(DETRHead):
             'enc_cls_scores': None,
             'enc_bbox_preds': None,
         }
-
+        # ここでprojects/mmdet3d_plugin/bevformer/detectors/bevformer.pyの272 lineのsimple_test_pts()に戻す
         return outs
 
     def _get_target_single(self,

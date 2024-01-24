@@ -10,4 +10,6 @@ class TransferWeight(Hook):
 
     def after_train_iter(self, runner):
         if self.every_n_inner_iters(runner, self.every_n_inters):
+            # runner.model.state_dict()--obtain the weights of the current model
+            # runner.eval_model.load_state_dict()--load these weights into the evaluation model
             runner.eval_model.load_state_dict(runner.model.state_dict())

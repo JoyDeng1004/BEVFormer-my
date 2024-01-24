@@ -90,6 +90,7 @@ class DetectionTransformerDecoder(TransformerLayerSequence):
         output = query
         intermediate = []
         intermediate_reference_points = []
+        # self.layers is inherited by parent class TransformerLayerSequence (from mmcv.cnn.bricks.transformer import TransformerLayerSequence)
         for lid, layer in enumerate(self.layers):
 
             reference_points_input = reference_points[..., :2].unsqueeze(

@@ -269,4 +269,5 @@ class TemporalSelfAttention(BaseModule):
         if not self.batch_first:
             output = output.permute(1, 0, 2)
 
+        # ここからprojects/mmdet3d_plugin/bevformer/modules/encoder.pyに戻す
         return self.dropout(output) + identity

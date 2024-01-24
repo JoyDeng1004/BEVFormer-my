@@ -145,7 +145,7 @@ class BEVFormer(MVXTwoStageDetector):
         return_loss=True.
         Note this setting will change the expected inputs. When
         `return_loss=True`, img and img_metas are single-nested (i.e.
-        torch.Tensor and list[dict]), and when `resturn_loss=False`, img and
+        torch.Tensor and list[dict]), and when `return_loss=False`, img and
         img_metas should be double nested (i.e.  list[torch.Tensor],
         list[list[dict]]), with the outer list indicating test time
         augmentations.
@@ -153,6 +153,7 @@ class BEVFormer(MVXTwoStageDetector):
         if return_loss:
             return self.forward_train(**kwargs)
         else:
+            # ここから237 lineのforward_test入る
             return self.forward_test(**kwargs)
     
     def obtain_history_bev(self, imgs_queue, img_metas_list):
@@ -259,7 +260,7 @@ class BEVFormer(MVXTwoStageDetector):
         else:
             img_metas[0][0]['can_bus'][-1] = 0
             img_metas[0][0]['can_bus'][:3] = 0
-
+        # ここから284 lineのsimple_testに入る
         new_prev_bev, bbox_results = self.simple_test(
             img_metas[0], img[0], prev_bev=self.prev_frame_info['prev_bev'], **kwargs)
         # During inference, we save the BEV features and ego motion of each timestamp.
@@ -270,6 +271,7 @@ class BEVFormer(MVXTwoStageDetector):
 
     def simple_test_pts(self, x, img_metas, prev_bev=None, rescale=False):
         """Test function"""
+        # ここからprojects/mmdet3d_plugin/bevformer/dense_heads/bevformer_head.pyに入る
         outs = self.pts_bbox_head(x, img_metas, prev_bev=prev_bev)
 
         bbox_list = self.pts_bbox_head.get_bboxes(
@@ -282,6 +284,9 @@ class BEVFormer(MVXTwoStageDetector):
 
     def simple_test(self, img_metas, img=None, prev_bev=None, rescale=False):
         """Test function without augmentaiton."""
+        # bevformer_base.py-->img_feats are feature layers of 4 different scales
+        # bevformer_tiny/small.py-->img_feats is feature layers of 1 scale
+        # feature extraction (img_backbone & img_neck) by ResNet+FPN
         img_feats = self.extract_feat(img=img, img_metas=img_metas)
 
         bbox_list = [dict() for i in range(len(img_metas))]

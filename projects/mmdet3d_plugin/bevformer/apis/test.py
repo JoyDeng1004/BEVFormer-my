@@ -69,6 +69,8 @@ def custom_multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False):
     have_mask = False
     for i, data in enumerate(data_loader):
         with torch.no_grad():
+            # model = dict(type='BEVFormer',...)-->class BEVFormer(nn.Module)
+            #　ここからprojects/mmdet3d_plugin/bevformer/detectors/bevformer.py(class BEVFormer定義されるとこと)に入る
             result = model(return_loss=False, rescale=True, **data)
             # encode mask results
             if isinstance(result, dict):

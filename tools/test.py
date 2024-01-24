@@ -19,6 +19,7 @@ from mmdet3d.datasets import build_dataset
 from projects.mmdet3d_plugin.datasets.builder import build_dataloader
 from mmdet3d.models import build_model
 from mmdet.apis import set_random_seed
+# 240 line
 from projects.mmdet3d_plugin.bevformer.apis.test import custom_multi_gpu_test
 from mmdet.datasets import replace_ImageToTensor
 import time
@@ -122,6 +123,7 @@ def main():
     if args.out is not None and not args.out.endswith(('.pkl', '.pickle')):
         raise ValueError('The output file must be a pkl file.')
 
+    # get the args from config file (bevformer_base/small/tiny.py)
     cfg = Config.fromfile(args.config)
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
@@ -202,7 +204,7 @@ def main():
         shuffle=False,
         nonshuffler_sampler=cfg.data.nonshuffler_sampler,
     )
-
+    
     # build the model and load checkpoint
     cfg.model.train_cfg = None
     model = build_model(cfg.model, test_cfg=cfg.get('test_cfg'))
@@ -234,6 +236,7 @@ def main():
             model.cuda(),
             device_ids=[torch.cuda.current_device()],
             broadcast_buffers=False)
+        # ここからprojects/mmdet3d_plugin/bevformer/apis/test.pyに入る
         outputs = custom_multi_gpu_test(model, data_loader, args.tmpdir,
                                         args.gpu_collect)
 

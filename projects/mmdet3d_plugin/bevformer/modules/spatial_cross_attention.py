@@ -396,4 +396,5 @@ class MSDeformableAttention3D(BaseModule):
         if not self.batch_first:
             output = output.permute(1, 0, 2)
 
+        # ここから32 lineのclass SpatialCrossAttention(BaseModule):に戻す
         return output

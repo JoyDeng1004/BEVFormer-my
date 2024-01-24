@@ -22,7 +22,7 @@ voxel_size = [0.2, 0.2, 8]
 
 
 
-
+# image standardization parameters
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 
@@ -85,12 +85,15 @@ model = dict(
             use_shift=True,
             use_can_bus=True,
             embed_dims=_dim_,
+            # encoder
             encoder=dict(
                 type='BEVFormerEncoder',
                 num_layers=3,
                 pc_range=point_cloud_range,
                 num_points_in_pillar=4,
                 return_intermediate=False,
+                # encode block
+                # A single block will be repeated 6 times during inference.
                 transformerlayers=dict(
                     type='BEVFormerLayer',
                     attn_cfgs=[
@@ -113,10 +116,12 @@ model = dict(
                     ffn_dropout=0.1,
                     operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
                                      'ffn', 'norm'))),
+            # decoder
             decoder=dict(
                 type='DetectionTransformerDecoder',
                 num_layers=6,
                 return_intermediate=True,
+                # decode block
                 transformerlayers=dict(
                     type='DetrTransformerDecoderLayer',
                     attn_cfgs=[
@@ -142,12 +147,14 @@ model = dict(
             max_num=300,
             voxel_size=voxel_size,
             num_classes=10),
+        # learnable PE
         positional_encoding=dict(
             type='LearnedPositionalEncoding',
             num_feats=_pos_dim_,
             row_num_embed=bev_h_,
             col_num_embed=bev_w_,
             ),
+        # loss
         loss_cls=dict(
             type='FocalLoss',
             use_sigmoid=True,

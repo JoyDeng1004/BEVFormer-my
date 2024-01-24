@@ -196,7 +196,7 @@ test_pipeline = [
 
 data = dict(
     samples_per_gpu=1,
-    workers_per_gpu=4,
+    workers_per_gpu=0,
     train=dict(
         type=dataset_type,
         data_root=data_root,
@@ -242,7 +242,7 @@ lr_config = dict(
     warmup_iters=500,
     warmup_ratio=1.0 / 3,
     min_lr_ratio=1e-3)
-total_epochs = 24
+total_epochs = 2
 evaluation = dict(interval=1, pipeline=test_pipeline)
 
 runner = dict(type='EpochBasedRunner', max_epochs=total_epochs)
